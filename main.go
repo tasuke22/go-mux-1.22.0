@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/tasuke/go-mux/config"
+	"net/http"
 )
 
 func main() {
@@ -13,4 +14,12 @@ func main() {
 		return
 	}
 	fmt.Println(db)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v1/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	http.ListenAndServe(":8080", mux)
+
 }
