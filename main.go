@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/tasuke/go-mux/config"
 	"github.com/tasuke/go-mux/model"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/crypto/bcrypt"
@@ -74,10 +73,10 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 	userId := "8947f187-6f5c-4a99-a237-e5bd032cf543"
 
 	// SQLBoilerを使用してToDoを作成
-	newTodo := &model.Task{
+	newTodo := &model.Todo{
 		Title:       todoRequest.Title,
-		Description: null.NewString(todoRequest.Description, true), // Descriptionがstring型の場合
-		Completed:   null.NewBool(todoRequest.Completed, todoRequest.Completed),
+		Description: todoRequest.Description,
+		Completed:   todoRequest.Completed,
 		UserID:      userId,
 	}
 
@@ -111,7 +110,7 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// SQLBoilerを使用してToDoを削除
-	todo, err := model.FindTask(ctx, db, numId)
+	todo, err := model.FindTodo(ctx, db, numId)
 	if err != nil {
 		http.Error(w, "Todo not found", http.StatusNotFound)
 		return
@@ -160,15 +159,15 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(id)
 
 	// SQLBoilerを使用してToDoを更新
-	todo, err := model.FindTask(ctx, db, numId)
+	todo, err := model.FindTodo(ctx, db, numId)
 	if err != nil {
 		http.Error(w, "Todo not found", http.StatusNotFound)
 		return
 	}
 
 	todo.Title = todoRequest.Title
-	todo.Description = null.NewString(todoRequest.Description, true) // Descriptionがstring型の場合
-	todo.Completed = null.NewBool(todoRequest.Completed, todoRequest.Completed)
+	todo.Description = todoRequest.Description
+	todo.Completed = todoRequest.Completed
 
 	if _, err := todo.Update(ctx, db, boil.Infer()); err != nil {
 		http.Error(w, "Failed to update todo", http.StatusInternalServerError)
@@ -200,7 +199,7 @@ func getTodoByID(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// SQLBoilerを使用してToDoを取得
-	todo, err := model.Tasks(qm.Where("id=?", id)).One(ctx, db)
+	todo, err := model.Todos(qm.Where("id=?", id)).One(ctx, db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -228,7 +227,7 @@ func getAllTodos(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// SQLBoilerを使用してすべてのToDoを取得
-	todos, err := model.Tasks().All(ctx, db)
+	todos, err := model.Todos().All(ctx, db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

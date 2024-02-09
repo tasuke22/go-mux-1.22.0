@@ -14,4 +14,9 @@ logs:
 	docker compose logs -f
 orm:
 	sqlboiler mysql -c config/database.toml -o model -p model --no-tests --wipe
+migrate:
+	migrate create -ext sql -dir migrations -seq add_timestamps_to_users_and_todos
 mup:
+	migrate -path migrations -database 'mysql://myuser:mypassword@tcp(127.0.0.1:3306)/mydatabase' -verbose up
+mdown:
+	migrate -path migrations -database 'mysql://myuser:mypassword@tcp(127.0.0.1:3306)/mydatabase' -verbose down

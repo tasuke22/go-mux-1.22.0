@@ -7,5 +7,5 @@ pass       = "mypassword"
 sslmode    = "false"
 whitelist = [
     "users",
-    "tasks"
+    "todos"
 ]
