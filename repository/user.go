@@ -7,22 +7,27 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+	SignUp(ctx context.Context, newUser *model.User) (*model.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
+}
+
+type userRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *sql.DB) UserRepository {
+	return &userRepository{db: db}
 }
 
-func (ur *UserRepository) SignUp(ctx context.Context, newUser *model.User) (*model.User, error) {
+func (ur *userRepository) SignUp(ctx context.Context, newUser *model.User) (*model.User, error) {
 	if err := newUser.Insert(ctx, ur.db, boil.Infer()); err != nil {
 		return nil, err
 	}
 	return newUser, nil
 }
 
-func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	user, err := model.Users(model.UserWhere.Email.EQ(email)).One(ctx, ur.db)
 	if err != nil {
 		return nil, err
