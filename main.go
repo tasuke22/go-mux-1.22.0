@@ -19,10 +19,10 @@ func main() {
 
 	ur := repository.NewUserRepository(db)
 	tr := repository.NewTaskRepository(db)
-	us := usecase.NewUserUsecase(ur)
-	ts := usecase.NewTaskUsecase(tr)
-	uc := controller.NewUserController(us)
-	tc := controller.NewTaskController(ts)
+	uu := usecase.NewUserUsecase(ur)
+	tu := usecase.NewTaskUsecase(tr)
+	uc := controller.NewUserController(uu)
+	tc := controller.NewTaskController(tu)
 	mux := router.NewRouter(uc, tc)
 
 	http.ListenAndServe(":8080", mux)
