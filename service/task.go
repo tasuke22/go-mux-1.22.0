@@ -64,7 +64,7 @@ type UpdateTodoRequest struct {
 
 func (ts *TaskService) UpdateTodo(ctx context.Context, id int, updateTodoRequest UpdateTodoRequest) (model.Todo, error) {
 
-	todo, err := ts.tr.FindTodoById(ctx, id)
+	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
 		return model.Todo{}, err
 	}
@@ -81,7 +81,7 @@ func (ts *TaskService) UpdateTodo(ctx context.Context, id int, updateTodoRequest
 }
 
 func (ts *TaskService) DeleteTodo(ctx context.Context, id int) (model.Todo, error) {
-	todo, err := ts.tr.FindTodoById(ctx, id)
+	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
 		return model.Todo{}, err
 	}

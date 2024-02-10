@@ -13,7 +13,6 @@ type TaskRepository interface {
 	GetTodoByID(ctx context.Context, id int) (*model.Todo, error)
 	UpdateTodo(ctx context.Context, todo *model.Todo) (*model.Todo, error)
 	DeleteTodo(ctx context.Context, todo *model.Todo) (*model.Todo, error)
-	FindTodoById(ctx context.Context, id int) (*model.Todo, error)
 }
 
 type taskRepository struct {
@@ -57,14 +56,6 @@ func (tr *taskRepository) UpdateTodo(ctx context.Context, todo *model.Todo) (*mo
 
 func (tr *taskRepository) DeleteTodo(ctx context.Context, todo *model.Todo) (*model.Todo, error) {
 	_, err := todo.Delete(ctx, tr.db)
-	if err != nil {
-		return nil, err
-	}
-	return todo, nil
-}
-
-func (tr *taskRepository) FindTodoById(ctx context.Context, id int) (*model.Todo, error) {
-	todo, err := model.FindTodo(ctx, tr.db, id)
 	if err != nil {
 		return nil, err
 	}
