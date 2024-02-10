@@ -23,8 +23,7 @@ func (uc *UserController) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	// service層のSignUpメソッドを呼び出し
 	// contextはDBと同じく一つのものをー
-	ctx := r.Context()
-	signUpResponse, err := uc.us.SignUp(ctx, signUpRequest)
+	signUpResponse, err := uc.us.SignUp(r.Context(), signUpRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

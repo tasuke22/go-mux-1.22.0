@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/tasuke/go-mux/service"
 	"net/http"
@@ -23,8 +22,7 @@ func (tc *TaskController) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := context.Background()
-	newTodo, err := tc.ts.CreateTodo(ctx, todoRequest)
+	newTodo, err := tc.ts.CreateTodo(r.Context(), todoRequest)
 	if err != nil {
 		http.Error(w, "Failed to create todo", http.StatusInternalServerError)
 		return
@@ -38,8 +36,7 @@ func (tc *TaskController) CreateTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (tc *TaskController) GetAllTodos(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-	allTodos, err := tc.ts.GetAllTodos(ctx)
+	allTodos, err := tc.ts.GetAllTodos(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -54,8 +51,7 @@ func (tc *TaskController) GetAllTodos(w http.ResponseWriter, r *http.Request) {
 func (tc *TaskController) GetTodoByID(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	taskID, _ := strconv.Atoi(id)
-	ctx := context.Background()
-	todo, err := tc.ts.GetTodoByID(ctx, taskID)
+	todo, err := tc.ts.GetTodoByID(r.Context(), taskID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -71,8 +67,7 @@ func (tc *TaskController) GetTodoByID(w http.ResponseWriter, r *http.Request) {
 func (tc *TaskController) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	taskID, _ := strconv.Atoi(id)
-	ctx := context.Background()
-	deleteTodo, err := tc.ts.DeleteTodo(ctx, taskID)
+	deleteTodo, err := tc.ts.DeleteTodo(r.Context(), taskID)
 	if err != nil {
 		http.Error(w, "Failed to delete todo", http.StatusInternalServerError)
 		return
@@ -95,8 +90,7 @@ func (tc *TaskController) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	taskId, _ := strconv.Atoi(id)
 
-	ctx := context.Background()
-	updateTodo, err := tc.ts.UpdateTodo(ctx, taskId, updateTodoRequest)
+	updateTodo, err := tc.ts.UpdateTodo(r.Context(), taskId, updateTodoRequest)
 	if err != nil {
 		http.Error(w, "Failed to update todo", http.StatusInternalServerError)
 		return
