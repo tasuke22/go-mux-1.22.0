@@ -6,7 +6,7 @@ import (
 	"github.com/tasuke/go-mux/controller"
 	"github.com/tasuke/go-mux/repository"
 	"github.com/tasuke/go-mux/router"
-	"github.com/tasuke/go-mux/service"
+	"github.com/tasuke/go-mux/usecase"
 	"net/http"
 )
 
@@ -19,8 +19,8 @@ func main() {
 
 	ur := repository.NewUserRepository(db)
 	tr := repository.NewTaskRepository(db)
-	us := service.NewUserService(ur)
-	ts := service.NewTaskService(tr)
+	us := usecase.NewUserUsecase(ur)
+	ts := usecase.NewTaskUsecase(tr)
 	uc := controller.NewUserController(us)
 	tc := controller.NewTaskController(ts)
 	mux := router.NewRouter(uc, tc)

@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 	"os"
 )
 
-type UserService struct {
+type UserUsecase struct {
 	ur repository.UserRepository
 }
 
-func NewUserService(ur repository.UserRepository) *UserService {
-	return &UserService{ur: ur}
+func NewUserUsecase(ur repository.UserRepository) *UserUsecase {
+	return &UserUsecase{ur: ur}
 }
 
 type SignUpRequest struct {
@@ -31,7 +31,7 @@ type SignUpResponse struct {
 }
 
 // サービスから直接エラーを返すようにしました。エラーメッセージの書き込みはコントローラに任せるべきです。
-func (us *UserService) SignUp(ctx context.Context, signUpRequest SignUpRequest) (SignUpResponse, error) {
+func (us *UserUsecase) SignUp(ctx context.Context, signUpRequest SignUpRequest) (SignUpResponse, error) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(signUpRequest.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -64,7 +64,7 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func (us *UserService) Login(loginRequest LoginRequest) (string, error) {
+func (us *UserUsecase) Login(loginRequest LoginRequest) (string, error) {
 	currentUser, err := us.ur.GetUserByEmail(context.Background(), loginRequest.Email)
 	if err != nil {
 		return "", err

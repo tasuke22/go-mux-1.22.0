@@ -2,20 +2,20 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/tasuke/go-mux/service"
+	"github.com/tasuke/go-mux/usecase"
 	"net/http"
 )
 
 type UserController struct {
-	us *service.UserService
+	us *usecase.UserUsecase
 }
 
-func NewUserController(us *service.UserService) *UserController {
+func NewUserController(us *usecase.UserUsecase) *UserController {
 	return &UserController{us}
 }
 
 func (uc *UserController) SignUp(w http.ResponseWriter, r *http.Request) {
-	var signUpRequest service.SignUpRequest
+	var signUpRequest usecase.SignUpRequest
 	if err := json.NewDecoder(r.Body).Decode(&signUpRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -42,7 +42,7 @@ type LoginResponse struct {
 }
 
 func (uc *UserController) Login(w http.ResponseWriter, r *http.Request) {
-	var loginRequest service.LoginRequest
+	var loginRequest usecase.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}

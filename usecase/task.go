@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"context"
@@ -6,12 +6,12 @@ import (
 	"github.com/tasuke/go-mux/repository"
 )
 
-type TaskService struct {
+type TaskUsecase struct {
 	tr repository.TaskRepository
 }
 
-func NewTaskService(tr repository.TaskRepository) *TaskService {
-	return &TaskService{tr: tr}
+func NewTaskUsecase(tr repository.TaskRepository) *TaskUsecase {
+	return &TaskUsecase{tr: tr}
 }
 
 type CreateTodoRequest struct {
@@ -20,7 +20,7 @@ type CreateTodoRequest struct {
 	Completed   bool   `json:"completed"`
 }
 
-func (ts *TaskService) CreateTodo(ctx context.Context, todoRequest CreateTodoRequest) (model.Todo, error) {
+func (ts *TaskUsecase) CreateTodo(ctx context.Context, todoRequest CreateTodoRequest) (model.Todo, error) {
 	// データベース接続を取得（dbは*sql.DB型のグローバル変数とします）
 	// jwtからログインしているユーザーIDを取得 TODO
 	userId := "7b31ecae-ab14-4f4a-a8b3-8b63cc10ddb2"
@@ -40,7 +40,7 @@ func (ts *TaskService) CreateTodo(ctx context.Context, todoRequest CreateTodoReq
 	return *newTodo, nil
 }
 
-func (ts *TaskService) GetAllTodos(ctx context.Context) (model.TodoSlice, error) {
+func (ts *TaskUsecase) GetAllTodos(ctx context.Context) (model.TodoSlice, error) {
 	todos, err := ts.tr.GetAllTodos(ctx)
 	if err != nil {
 		return model.TodoSlice{}, err
@@ -48,7 +48,7 @@ func (ts *TaskService) GetAllTodos(ctx context.Context) (model.TodoSlice, error)
 	return todos, nil
 }
 
-func (ts *TaskService) GetTodoByID(ctx context.Context, id int) (model.Todo, error) {
+func (ts *TaskUsecase) GetTodoByID(ctx context.Context, id int) (model.Todo, error) {
 	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
 		return model.Todo{}, err
@@ -62,7 +62,7 @@ type UpdateTodoRequest struct {
 	Completed   bool   `json:"completed"`
 }
 
-func (ts *TaskService) UpdateTodo(ctx context.Context, id int, updateTodoRequest UpdateTodoRequest) (model.Todo, error) {
+func (ts *TaskUsecase) UpdateTodo(ctx context.Context, id int, updateTodoRequest UpdateTodoRequest) (model.Todo, error) {
 
 	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
@@ -80,7 +80,7 @@ func (ts *TaskService) UpdateTodo(ctx context.Context, id int, updateTodoRequest
 	return *todo, nil
 }
 
-func (ts *TaskService) DeleteTodo(ctx context.Context, id int) (model.Todo, error) {
+func (ts *TaskUsecase) DeleteTodo(ctx context.Context, id int) (model.Todo, error) {
 	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
 		return model.Todo{}, err

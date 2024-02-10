@@ -2,21 +2,21 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/tasuke/go-mux/service"
+	"github.com/tasuke/go-mux/usecase"
 	"net/http"
 	"strconv"
 )
 
 type TaskController struct {
-	ts *service.TaskService
+	ts *usecase.TaskUsecase
 }
 
-func NewTaskController(ts *service.TaskService) *TaskController {
+func NewTaskController(ts *usecase.TaskUsecase) *TaskController {
 	return &TaskController{ts: ts}
 }
 
 func (tc *TaskController) CreateTodo(w http.ResponseWriter, r *http.Request) {
-	var todoRequest service.CreateTodoRequest
+	var todoRequest usecase.CreateTodoRequest
 	if err := json.NewDecoder(r.Body).Decode(&todoRequest); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -81,7 +81,7 @@ func (tc *TaskController) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (tc *TaskController) UpdateTodo(w http.ResponseWriter, r *http.Request) {
-	var updateTodoRequest service.UpdateTodoRequest
+	var updateTodoRequest usecase.UpdateTodoRequest
 	if err := json.NewDecoder(r.Body).Decode(&updateTodoRequest); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
