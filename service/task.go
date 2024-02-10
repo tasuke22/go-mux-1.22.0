@@ -2,18 +2,16 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"github.com/tasuke/go-mux/model"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"github.com/tasuke/go-mux/repository"
 )
 
 type TaskService struct {
-	db *sql.DB
+	tr *repository.TaskRepository
 }
 
-func NewTaskService(db *sql.DB) *TaskService {
-	return &TaskService{db}
+func NewTaskService(tr *repository.TaskRepository) *TaskService {
+	return &TaskService{tr: tr}
 }
 
 type CreateTodoRequest struct {
@@ -35,14 +33,15 @@ func (ts *TaskService) CreateTodo(ctx context.Context, todoRequest CreateTodoReq
 		UserID:      userId,
 	}
 
-	if err := newTodo.Insert(ctx, ts.db, boil.Infer()); err != nil {
+	newTodo, err := ts.tr.CreateTodo(ctx, newTodo)
+	if err != nil {
 		return model.Todo{}, err
 	}
 	return *newTodo, nil
 }
 
 func (ts *TaskService) GetAllTodos(ctx context.Context) (model.TodoSlice, error) {
-	todos, err := model.Todos().All(ctx, ts.db)
+	todos, err := ts.tr.GetAllTodos(ctx)
 	if err != nil {
 		return model.TodoSlice{}, err
 	}
@@ -50,7 +49,7 @@ func (ts *TaskService) GetAllTodos(ctx context.Context) (model.TodoSlice, error)
 }
 
 func (ts *TaskService) GetTodoByID(ctx context.Context, id int) (model.Todo, error) {
-	todo, err := model.Todos(qm.Where("id=?", id)).One(ctx, ts.db)
+	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
 		return model.Todo{}, err
 	}
@@ -65,8 +64,7 @@ type UpdateTodoRequest struct {
 
 func (ts *TaskService) UpdateTodo(ctx context.Context, id int, updateTodoRequest UpdateTodoRequest) (model.Todo, error) {
 
-	// SQLBoilerを使用してToDoを更新
-	todo, err := model.FindTodo(ctx, ts.db, id)
+	todo, err := ts.tr.FindTodoById(ctx, id)
 	if err != nil {
 		return model.Todo{}, err
 	}
@@ -75,19 +73,21 @@ func (ts *TaskService) UpdateTodo(ctx context.Context, id int, updateTodoRequest
 	todo.Description = updateTodoRequest.Description
 	todo.Completed = updateTodoRequest.Completed
 
-	if _, err := todo.Update(ctx, ts.db, boil.Infer()); err != nil {
+	todo, err = ts.tr.UpdateTodo(ctx, todo)
+	if err != nil {
 		return model.Todo{}, err
 	}
 	return *todo, nil
 }
 
 func (ts *TaskService) DeleteTodo(ctx context.Context, id int) (model.Todo, error) {
-	todo, err := model.FindTodo(ctx, ts.db, id)
+	todo, err := ts.tr.FindTodoById(ctx, id)
 	if err != nil {
 		return model.Todo{}, err
 	}
 
-	if _, err := todo.Delete(ctx, ts.db); err != nil {
+	todo, err = ts.tr.DeleteTodo(ctx, todo)
+	if err != nil {
 		return model.Todo{}, err
 	}
 	return *todo, nil

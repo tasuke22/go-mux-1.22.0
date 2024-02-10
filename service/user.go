@@ -2,22 +2,20 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/tasuke/go-mux/model"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"github.com/tasuke/go-mux/repository"
 	"golang.org/x/crypto/bcrypt"
 	"os"
 )
 
 type UserService struct {
-	db *sql.DB
+	ur *repository.UserRepository
 }
 
-func NewUserService(db *sql.DB) *UserService {
-	return &UserService{db: db}
+func NewUserService(ur *repository.UserRepository) *UserService {
+	return &UserService{ur: ur}
 }
 
 type SignUpRequest struct {
@@ -39,7 +37,7 @@ func (us *UserService) SignUp(ctx context.Context, signUpRequest SignUpRequest) 
 	if err != nil {
 		return SignUpResponse{}, nil
 	}
-	// データベース操作で使用され、その操作によってオブジェクトが変更される可能性があるため
+
 	newUser := &model.User{
 		ID:       uuid.New().String(),
 		Name:     signUpRequest.Name,
@@ -47,16 +45,15 @@ func (us *UserService) SignUp(ctx context.Context, signUpRequest SignUpRequest) 
 		Password: string(hashedPassword),
 	}
 
-	err = newUser.Insert(ctx, us.db, boil.Infer())
+	signedUpUser, err := us.ur.SignUp(ctx, newUser)
 	if err != nil {
 		return SignUpResponse{}, nil
 	}
 
-	// 値でOK。小さい構造体、レスポンスするためだけの構造体, 構造体を変更する必要がない,=> コードの意図がより明確
 	signUpResponse := SignUpResponse{
-		ID:    newUser.ID,
-		Name:  newUser.Name,
-		Email: newUser.Email,
+		ID:    signedUpUser.ID,
+		Name:  signedUpUser.Name,
+		Email: signedUpUser.Email,
 	}
 
 	return signUpResponse, nil
@@ -68,7 +65,7 @@ type LoginRequest struct {
 }
 
 func (us *UserService) Login(loginRequest LoginRequest) (string, error) {
-	currentUser, err := fetchUserByEmail(us.db, loginRequest.Email)
+	currentUser, err := us.ur.GetUserByEmail(context.Background(), loginRequest.Email)
 	if err != nil {
 		return "", err
 	}
@@ -89,14 +86,4 @@ func (us *UserService) Login(loginRequest LoginRequest) (string, error) {
 		return "", err
 	}
 	return tokenString, nil
-}
-
-// fetchUserByEmail は与えられたメールアドレスに一致するユーザーをデータベースから検索します。
-func fetchUserByEmail(db *sql.DB, email string) (*model.User, error) {
-	// context.Background() は、実際のアプリケーションでは適切なコンテキストに置き換えるべきです。
-	user, err := model.Users(qm.Where("email=?", email)).One(context.Background(), db)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
 }
