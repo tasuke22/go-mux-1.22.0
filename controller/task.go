@@ -8,99 +8,101 @@ import (
 )
 
 type TaskController struct {
-	ts *usecase.TaskUsecase
+	tu *usecase.TaskUsecase
 }
 
-func NewTaskController(ts *usecase.TaskUsecase) *TaskController {
-	return &TaskController{ts: ts}
+func NewTaskController(tu *usecase.TaskUsecase) *TaskController {
+	return &TaskController{tu: tu}
 }
 
 func (tc *TaskController) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	var todoRequest usecase.CreateTodoRequest
 	if err := json.NewDecoder(r.Body).Decode(&todoRequest); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		sendErrorResponse(w, "リクエストボディが無効です。", http.StatusBadRequest)
 		return
 	}
 
-	newTodo, err := tc.ts.CreateTodo(r.Context(), todoRequest)
+	newTodo, err := tc.tu.CreateTodo(r.Context(), todoRequest)
 	if err != nil {
 		http.Error(w, "Failed to create todo", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(newTodo); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	}
+	sendJSONResponse(w, newTodo, http.StatusCreated)
 }
 
 func (tc *TaskController) GetAllTodos(w http.ResponseWriter, r *http.Request) {
-	allTodos, err := tc.ts.GetAllTodos(r.Context())
+	allTodos, err := tc.tu.GetAllTodos(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendErrorResponse(w, "ToDoの取得に失敗しました。", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(allTodos); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	sendJSONResponse(w, allTodos, http.StatusOK)
 }
 
 func (tc *TaskController) GetTodoByID(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	taskID, _ := strconv.Atoi(id)
-	todo, err := tc.ts.GetTodoByID(r.Context(), taskID)
+	taskID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendErrorResponse(w, "ToDoのIDが無効です。", http.StatusBadRequest)
 		return
-
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(todo); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	todo, err := tc.tu.GetTodoByID(r.Context(), taskID)
+	if err != nil {
+		sendErrorResponse(w, "指定されたToDoの取得に失敗しました。", http.StatusInternalServerError)
+		return
 	}
+
+	sendJSONResponse(w, todo, http.StatusOK)
 }
 
 func (tc *TaskController) DeleteTodo(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	taskID, _ := strconv.Atoi(id)
-	deleteTodo, err := tc.ts.DeleteTodo(r.Context(), taskID)
+	taskID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "Failed to delete todo", http.StatusInternalServerError)
+		sendErrorResponse(w, "ToDoのIDが無効です。", http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(deleteTodo); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	deleteTodo, err := tc.tu.DeleteTodo(r.Context(), taskID)
+	if err != nil {
+		sendErrorResponse(w, "ToDoの削除に失敗しました。", http.StatusInternalServerError)
+		return
 	}
+
+	sendJSONResponse(w, deleteTodo, http.StatusOK)
 }
 
 func (tc *TaskController) UpdateTodo(w http.ResponseWriter, r *http.Request) {
+	taskID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		sendErrorResponse(w, "ToDoのIDが無効です。", http.StatusBadRequest)
+		return
+	}
+
 	var updateTodoRequest usecase.UpdateTodoRequest
 	if err := json.NewDecoder(r.Body).Decode(&updateTodoRequest); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		sendErrorResponse(w, "リクエストボディが無効です。", http.StatusBadRequest)
 		return
 	}
-	// URLパラメータからToDoのIDを取得
-	id := r.PathValue("id")
-	taskId, _ := strconv.Atoi(id)
 
-	updateTodo, err := tc.ts.UpdateTodo(r.Context(), taskId, updateTodoRequest)
+	updatedTodo, err := tc.tu.UpdateTodo(r.Context(), taskID, updateTodoRequest)
 	if err != nil {
-		http.Error(w, "Failed to update todo", http.StatusInternalServerError)
+		sendErrorResponse(w, "ToDoの更新に失敗しました。", http.StatusInternalServerError)
 		return
-
 	}
 
-	// 更新されたToDoをレスポンスとして返す
+	sendJSONResponse(w, updatedTodo, http.StatusOK)
+}
+
+func sendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
+	http.Error(w, message, statusCode)
+}
+
+func sendJSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(updateTodo); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		sendErrorResponse(w, "レスポンスのエンコードに失敗しました。", http.StatusInternalServerError)
 	}
 }

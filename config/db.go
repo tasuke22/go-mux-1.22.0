@@ -3,7 +3,6 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -11,13 +10,13 @@ import (
 )
 
 func NewDB() (*sql.DB, error) {
-	// .env ファイルから環境変数をロード
+	// .env ファイルから環境変数をロード（エラーがあってもプログラムは終了しない）
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		fmt.Println("警告: .env ファイルのロードに失敗しました。環境変数が設定されていることを確認してください。")
 	}
 
-	// appからアクセスしてるわけではないので、dbでなくlocalhostでいい
+	// データベース接続用のDSNを構築
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		os.Getenv("MYSQL_USER"),
 		os.Getenv("MYSQL_PASSWORD"),
@@ -26,16 +25,14 @@ func NewDB() (*sql.DB, error) {
 	// データベースに接続
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatalf("Failed to open database: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("データベース接続のオープンに失敗しました: %w", err)
 	}
 
 	// データベース接続を確認
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("データベースへのpingに失敗しました: %w", err)
 	}
 
-	fmt.Println("Connected to MySQL")
+	fmt.Println("MySQLへの接続に成功しました")
 	return db, nil
 }

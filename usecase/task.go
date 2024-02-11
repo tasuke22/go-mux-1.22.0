@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"github.com/tasuke/go-mux/model"
 	"github.com/tasuke/go-mux/repository"
 )
@@ -43,7 +44,7 @@ func (ts *TaskUsecase) CreateTodo(ctx context.Context, todoRequest CreateTodoReq
 func (ts *TaskUsecase) GetAllTodos(ctx context.Context) (model.TodoSlice, error) {
 	todos, err := ts.tr.GetAllTodos(ctx)
 	if err != nil {
-		return model.TodoSlice{}, err
+		return model.TodoSlice{}, fmt.Errorf("toDoの取得に失敗しました: %w", err)
 	}
 	return todos, nil
 }
@@ -51,7 +52,7 @@ func (ts *TaskUsecase) GetAllTodos(ctx context.Context) (model.TodoSlice, error)
 func (ts *TaskUsecase) GetTodoByID(ctx context.Context, id int) (model.Todo, error) {
 	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
-		return model.Todo{}, err
+		return model.Todo{}, fmt.Errorf("IDによるtodoの取得に失敗しました: %w", err)
 	}
 	return *todo, nil
 }
@@ -63,32 +64,31 @@ type UpdateTodoRequest struct {
 }
 
 func (ts *TaskUsecase) UpdateTodo(ctx context.Context, id int, updateTodoRequest UpdateTodoRequest) (model.Todo, error) {
-
 	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
-		return model.Todo{}, err
+		return model.Todo{}, fmt.Errorf("更新するtodoの取得に失敗しました: %w", err)
 	}
 
 	todo.Title = updateTodoRequest.Title
 	todo.Description = updateTodoRequest.Description
 	todo.Completed = updateTodoRequest.Completed
 
-	todo, err = ts.tr.UpdateTodo(ctx, todo)
+	updatedTodo, err := ts.tr.UpdateTodo(ctx, todo)
 	if err != nil {
-		return model.Todo{}, err
+		return model.Todo{}, fmt.Errorf("todoの更新に失敗しました: %w", err)
 	}
-	return *todo, nil
+	return *updatedTodo, nil
 }
 
-func (ts *TaskUsecase) DeleteTodo(ctx context.Context, id int) (model.Todo, error) {
+func (ts *TaskUsecase) DeleteTodo(ctx context.Context, id int) (*model.Todo, error) {
 	todo, err := ts.tr.GetTodoByID(ctx, id)
 	if err != nil {
-		return model.Todo{}, err
+		return nil, fmt.Errorf("削除するtodoの取得に失敗しました: %w", err)
 	}
 
-	todo, err = ts.tr.DeleteTodo(ctx, todo)
+	deletedTodo, err := ts.tr.DeleteTodo(ctx, todo)
 	if err != nil {
-		return model.Todo{}, err
+		return nil, fmt.Errorf("todoの削除に失敗しました: %w", err)
 	}
-	return *todo, nil
+	return deletedTodo, nil
 }
