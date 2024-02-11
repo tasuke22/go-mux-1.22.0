@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/tasuke/go-mux/model"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
@@ -30,6 +31,9 @@ func (ur *userRepository) SignUp(ctx context.Context, newUser *model.User) (*mod
 func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	user, err := model.Users(model.UserWhere.Email.EQ(email)).One(ctx, ur.db)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return user, nil

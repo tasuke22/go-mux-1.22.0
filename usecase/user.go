@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/tasuke/go-mux/model"
@@ -30,12 +31,11 @@ type SignUpResponse struct {
 	Email string `json:"email"`
 }
 
-// サービスから直接エラーを返すようにしました。エラーメッセージの書き込みはコントローラに任せるべきです。
 func (us *UserUsecase) SignUp(ctx context.Context, signUpRequest SignUpRequest) (SignUpResponse, error) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(signUpRequest.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return SignUpResponse{}, nil
+		return SignUpResponse{}, err
 	}
 
 	newUser := &model.User{
@@ -47,16 +47,14 @@ func (us *UserUsecase) SignUp(ctx context.Context, signUpRequest SignUpRequest) 
 
 	signedUpUser, err := us.ur.SignUp(ctx, newUser)
 	if err != nil {
-		return SignUpResponse{}, nil
+		return SignUpResponse{}, err
 	}
 
-	signUpResponse := SignUpResponse{
+	return SignUpResponse{
 		ID:    signedUpUser.ID,
 		Name:  signedUpUser.Name,
 		Email: signedUpUser.Email,
-	}
-
-	return signUpResponse, nil
+	}, nil
 }
 
 type LoginRequest struct {
@@ -72,7 +70,7 @@ func (us *UserUsecase) Login(loginRequest LoginRequest) (string, error) {
 	// パスワードの検証
 	err = bcrypt.CompareHashAndPassword([]byte(currentUser.Password), []byte(loginRequest.Password))
 	if err != nil {
-		return "", err
+		return "", errors.New("無効なパスワードです") // より具体的なエラーメッセージ
 	}
 	// JWTトークンの生成準備
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

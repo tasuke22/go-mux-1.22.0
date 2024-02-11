@@ -11,30 +11,24 @@ type UserController struct {
 }
 
 func NewUserController(us *usecase.UserUsecase) *UserController {
-	return &UserController{us}
+	return &UserController{us: us}
 }
 
 func (uc *UserController) SignUp(w http.ResponseWriter, r *http.Request) {
 	var signUpRequest usecase.SignUpRequest
 	if err := json.NewDecoder(r.Body).Decode(&signUpRequest); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		sendErrorResponse(w, "リクエストのデコードに失敗しました", http.StatusBadRequest)
 		return
 	}
 
-	// service層のSignUpメソッドを呼び出し
-	// contextはDBと同じく一つのものをー
 	signUpResponse, err := uc.us.SignUp(r.Context(), signUpRequest)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendErrorResponse(w, "サインアップに失敗しました", http.StatusInternalServerError)
 		return
 	}
 
 	// レスポンスを設定
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated) // 201 Created ステータスコードを返す
-	if err := json.NewEncoder(w).Encode(signUpResponse); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	sendJSONResponse(w, signUpResponse, http.StatusCreated)
 }
 
 type LoginResponse struct {
@@ -44,18 +38,14 @@ type LoginResponse struct {
 func (uc *UserController) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest usecase.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		sendErrorResponse(w, "リクエストのデコードに失敗しました", http.StatusBadRequest)
+		return
 	}
 	tokenString, err := uc.us.Login(loginRequest)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendErrorResponse(w, "ログインに失敗しました", http.StatusInternalServerError)
 		return
 	}
 
-	// トークンの返却
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(LoginResponse{Token: tokenString}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	sendJSONResponse(w, LoginResponse{Token: tokenString}, http.StatusOK)
 }
