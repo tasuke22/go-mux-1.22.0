@@ -56,7 +56,14 @@ func (tc *TaskController) GetTodoByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	todo, err := tc.tu.GetTodoByID(r.Context(), taskID)
+	// ユーザーIDを取得
+	userId, err := auth.ExtractUserIDFromToken(r)
+	if err != nil {
+		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
+		return
+	}
+
+	todo, err := tc.tu.GetTodoByID(r.Context(), taskID, userId)
 	if err != nil {
 		sendErrorResponse(w, "指定されたToDoの取得に失敗しました。", http.StatusInternalServerError)
 		return
@@ -72,7 +79,14 @@ func (tc *TaskController) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deleteTodo, err := tc.tu.DeleteTodo(r.Context(), taskID)
+	// ユーザーIDを取得
+	userId, err := auth.ExtractUserIDFromToken(r)
+	if err != nil {
+		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
+		return
+	}
+
+	deleteTodo, err := tc.tu.DeleteTodo(r.Context(), taskID, userId)
 	if err != nil {
 		sendErrorResponse(w, "ToDoの削除に失敗しました。", http.StatusInternalServerError)
 		return
@@ -94,7 +108,14 @@ func (tc *TaskController) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedTodo, err := tc.tu.UpdateTodo(r.Context(), taskID, updateTodoRequest)
+	// ユーザーIDを取得
+	userId, err := auth.ExtractUserIDFromToken(r)
+	if err != nil {
+		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
+		return
+	}
+
+	updatedTodo, err := tc.tu.UpdateTodo(r.Context(), taskID, userId, updateTodoRequest)
 	if err != nil {
 		sendErrorResponse(w, "ToDoの更新に失敗しました。", http.StatusInternalServerError)
 		return

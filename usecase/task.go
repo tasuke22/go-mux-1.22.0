@@ -45,8 +45,8 @@ func (ts *TaskUsecase) GetAllTodos(ctx context.Context) (model.TodoSlice, error)
 	return todos, nil
 }
 
-func (ts *TaskUsecase) GetTodoByID(ctx context.Context, id int) (model.Todo, error) {
-	todo, err := ts.tr.GetTodoByID(ctx, id)
+func (ts *TaskUsecase) GetTodoByID(ctx context.Context, id int, userId string) (model.Todo, error) {
+	todo, err := ts.tr.GetTodoByID(ctx, id, userId)
 	if err != nil {
 		return model.Todo{}, fmt.Errorf("IDによるtodoの取得に失敗しました: %w", err)
 	}
@@ -59,8 +59,8 @@ type UpdateTodoRequest struct {
 	Completed   bool   `json:"completed"`
 }
 
-func (ts *TaskUsecase) UpdateTodo(ctx context.Context, id int, updateTodoRequest UpdateTodoRequest) (model.Todo, error) {
-	todo, err := ts.tr.GetTodoByID(ctx, id)
+func (ts *TaskUsecase) UpdateTodo(ctx context.Context, id int, userId string, updateTodoRequest UpdateTodoRequest) (model.Todo, error) {
+	todo, err := ts.tr.GetTodoByID(ctx, id, userId)
 	if err != nil {
 		return model.Todo{}, fmt.Errorf("更新するtodoの取得に失敗しました: %w", err)
 	}
@@ -76,15 +76,11 @@ func (ts *TaskUsecase) UpdateTodo(ctx context.Context, id int, updateTodoRequest
 	return *updatedTodo, nil
 }
 
-func (ts *TaskUsecase) DeleteTodo(ctx context.Context, id int) (*model.Todo, error) {
-	todo, err := ts.tr.GetTodoByID(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("削除するtodoの取得に失敗しました: %w", err)
-	}
-
-	deletedTodo, err := ts.tr.DeleteTodo(ctx, todo)
+func (ts *TaskUsecase) DeleteTodo(ctx context.Context, todoId int, userId string) (*model.Todo, error) {
+	// ToDoを削除
+	deleteTodo, err := ts.tr.DeleteTodo(ctx, todoId, userId)
 	if err != nil {
 		return nil, fmt.Errorf("todoの削除に失敗しました: %w", err)
 	}
-	return deletedTodo, nil
+	return deleteTodo, nil
 }

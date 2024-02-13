@@ -16,7 +16,7 @@ func NewRouter(uc *controller.UserController, tc *controller.TaskController) *ht
 	mux.HandleFunc("POST /api/v1/auth/login", uc.Login)
 	mux.Handle("POST /api/v1/auth/logout", middleware.JWTMiddleware(uc.Logout))
 
-	mux.Handle("/api/v1/todos", middleware.JWTMiddleware(tc.CreateTodo))
+	mux.Handle("POST /api/v1/todos", middleware.JWTMiddleware(tc.CreateTodo))
 	mux.HandleFunc("GET /api/v1/todos", tc.GetAllTodos)
 	mux.HandleFunc("GET /api/v1/todos/{id}", tc.GetTodoByID)
 	mux.Handle("POST /api/v1/todos/{id}", middleware.JWTMiddleware(tc.UpdateTodo))

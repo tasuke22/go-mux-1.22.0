@@ -11,9 +11,9 @@ import (
 type TaskRepository interface {
 	CreateTodo(ctx context.Context, newTodo *model.Todo) (*model.Todo, error)
 	GetAllTodos(ctx context.Context) (model.TodoSlice, error)
-	GetTodoByID(ctx context.Context, id int) (*model.Todo, error)
+	GetTodoByID(ctx context.Context, id int, userId string) (*model.Todo, error)
 	UpdateTodo(ctx context.Context, todo *model.Todo) (*model.Todo, error)
-	DeleteTodo(ctx context.Context, todo *model.Todo) (*model.Todo, error)
+	DeleteTodo(ctx context.Context, todoId int, userId string) (*model.Todo, error)
 }
 
 type taskRepository struct {
@@ -39,8 +39,8 @@ func (tr *taskRepository) GetAllTodos(ctx context.Context) (model.TodoSlice, err
 	return todos, nil
 }
 
-func (tr *taskRepository) GetTodoByID(ctx context.Context, id int) (*model.Todo, error) {
-	todo, err := model.FindTodo(ctx, tr.db, id)
+func (tr *taskRepository) GetTodoByID(ctx context.Context, id int, userId string) (*model.Todo, error) {
+	todo, err := model.Todos(model.TodoWhere.ID.EQ(id), model.TodoWhere.UserID.EQ(userId)).One(ctx, tr.db)
 	if err != nil {
 		return nil, fmt.Errorf("IDによるtodoの取得に失敗しました: %w", err)
 	}
@@ -55,10 +55,22 @@ func (tr *taskRepository) UpdateTodo(ctx context.Context, todo *model.Todo) (*mo
 	return todo, nil
 }
 
-func (tr *taskRepository) DeleteTodo(ctx context.Context, todo *model.Todo) (*model.Todo, error) {
-	_, err := todo.Delete(ctx, tr.db)
+func (tr *taskRepository) DeleteTodo(ctx context.Context, todoId int, userId string) (*model.Todo, error) {
+	// 最初に、指定されたIDとuserIdに一致するToDoをデータベースから検索します。
+	todo, err := model.Todos(model.TodoWhere.ID.EQ(todoId), model.TodoWhere.UserID.EQ(userId)).One(ctx, tr.db)
 	if err != nil {
-		return nil, fmt.Errorf("todoの削除に失敗しました: %w", err)
+		if err == sql.ErrNoRows {
+			// 指定された条件に一致するToDoが存在しない場合
+			return nil, fmt.Errorf("指定されたToDoが見つかりませんでした: %w", err)
+		}
+		// その他のエラーの場合
+		return nil, fmt.Errorf("ToDoの検索に失敗しました: %w", err)
 	}
+
+	// ToDoをデータベースから削除します。
+	if _, err := todo.Delete(ctx, tr.db); err != nil {
+		return nil, fmt.Errorf("ToDoの削除に失敗しました: %w", err)
+	}
+
 	return todo, nil
 }
