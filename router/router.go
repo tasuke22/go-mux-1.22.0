@@ -13,6 +13,7 @@ func NewRouter(uc *controller.UserController, tc *controller.TaskController) *ht
 
 	mux.HandleFunc("POST /api/v1/auth/signup", uc.SignUp)
 	mux.HandleFunc("POST /api/v1/auth/login", uc.Login)
+	mux.HandleFunc("POST /api/v1/auth/logout", uc.Logout)
 
 	mux.HandleFunc("POST /api/v1/todos", tc.CreateTodo)
 	mux.HandleFunc("GET /api/v1/todos", tc.GetAllTodos)

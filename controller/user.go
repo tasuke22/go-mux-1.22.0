@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/tasuke/go-mux/usecase"
 	"net/http"
+	"time"
 )
 
 type UserController struct {
@@ -47,5 +48,29 @@ func (uc *UserController) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie := http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	http.SetCookie(w, &cookie)
+
 	sendJSONResponse(w, LoginResponse{Token: tokenString}, http.StatusOK)
+}
+
+func (uc *UserController) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, &cookie)
+	sendJSONResponse(w, "ログアウトしました", http.StatusOK)
 }
