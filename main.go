@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/tasuke/go-mux/auth"
 	"github.com/tasuke/go-mux/config"
 	"github.com/tasuke/go-mux/controller"
 	"github.com/tasuke/go-mux/repository"
@@ -25,9 +26,12 @@ func main() {
 	uu := usecase.NewUserUsecase(ur)
 	tu := usecase.NewTaskUsecase(tr)
 
+	// 認証トークンからユーザーIDを抽出するための初期化
+	at := auth.NewAuthToken()
+
 	// コントローラの初期化
 	uc := controller.NewUserController(uu)
-	tc := controller.NewTaskController(tu)
+	tc := controller.NewTaskController(tu, at)
 
 	// ルータの初期化
 	mux := router.NewRouter(uc, tc)

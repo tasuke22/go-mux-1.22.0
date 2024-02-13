@@ -7,8 +7,14 @@ import (
 	"os"
 )
 
+type AuthToken struct{}
+
+func NewAuthToken() *AuthToken {
+	return &AuthToken{}
+}
+
 // ExtractUserIDFromToken はリクエストからJWTトークンを抽出し、そこからuserIDを取り出します。
-func ExtractUserIDFromToken(r *http.Request) (string, error) {
+func (at *AuthToken) ExtractUserIDFromToken(r *http.Request) (string, error) {
 	c, err := r.Cookie("token")
 	if err != nil {
 		return "", err

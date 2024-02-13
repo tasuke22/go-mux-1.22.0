@@ -10,10 +10,11 @@ import (
 
 type TaskController struct {
 	tu *usecase.TaskUsecase
+	at *auth.AuthToken
 }
 
-func NewTaskController(tu *usecase.TaskUsecase) *TaskController {
-	return &TaskController{tu: tu}
+func NewTaskController(tu *usecase.TaskUsecase, at *auth.AuthToken) *TaskController {
+	return &TaskController{tu: tu, at: at}
 }
 
 func (tc *TaskController) CreateTodo(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,7 @@ func (tc *TaskController) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ユーザーIDを取得
-	userId, err := auth.ExtractUserIDFromToken(r)
+	userId, err := tc.at.ExtractUserIDFromToken(r)
 	if err != nil {
 		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
 		return
@@ -57,7 +58,7 @@ func (tc *TaskController) GetTodoByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ユーザーIDを取得
-	userId, err := auth.ExtractUserIDFromToken(r)
+	userId, err := tc.at.ExtractUserIDFromToken(r)
 	if err != nil {
 		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
 		return
@@ -80,7 +81,7 @@ func (tc *TaskController) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ユーザーIDを取得
-	userId, err := auth.ExtractUserIDFromToken(r)
+	userId, err := tc.at.ExtractUserIDFromToken(r)
 	if err != nil {
 		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
 		return
@@ -109,7 +110,7 @@ func (tc *TaskController) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ユーザーIDを取得
-	userId, err := auth.ExtractUserIDFromToken(r)
+	userId, err := tc.at.ExtractUserIDFromToken(r)
 	if err != nil {
 		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
 		return
