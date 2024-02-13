@@ -2,10 +2,9 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/golang-jwt/jwt"
+	"github.com/tasuke/go-mux/auth"
 	"github.com/tasuke/go-mux/usecase"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -24,37 +23,14 @@ func (tc *TaskController) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Cookieからトークンを取得
-	c, err := r.Cookie("token")
+	// ユーザーIDを取得
+	userId, err := auth.ExtractUserIDFromToken(r)
 	if err != nil {
-		http.Error(w, "認証が必要です。", http.StatusUnauthorized)
-		return
-	}
-	tokenString := c.Value
-
-	// トークンの解析
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("SECRET")), nil
-	})
-	if err != nil {
-		http.Error(w, "トークンの解析に失敗しました。", http.StatusUnauthorized)
+		sendErrorResponse(w, "認証が必要です。", http.StatusUnauthorized)
 		return
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		http.Error(w, "トークンが無効です。", http.StatusUnauthorized)
-		return
-	}
-
-	// MapClaimsからuser_idを取得
-	userID, ok := claims["user_id"].(string)
-	if !ok {
-		http.Error(w, "トークンからユーザーIDを取得できませんでした。", http.StatusUnauthorized)
-		return
-	}
-
-	newTodo, err := tc.tu.CreateTodo(r.Context(), todoRequest, userID)
+	newTodo, err := tc.tu.CreateTodo(r.Context(), todoRequest, userId)
 	if err != nil {
 		http.Error(w, "Failed to create todo", http.StatusInternalServerError)
 		return
