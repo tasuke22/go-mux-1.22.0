@@ -83,5 +83,7 @@ func (us *UserUsecase) Login(loginRequest LoginRequest) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// https://jwt.io/
+	//fmt.Println(tokenString)
 	return tokenString, nil
 }

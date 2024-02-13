@@ -21,11 +21,7 @@ type CreateTodoRequest struct {
 	Completed   bool   `json:"completed"`
 }
 
-func (ts *TaskUsecase) CreateTodo(ctx context.Context, todoRequest CreateTodoRequest) (model.Todo, error) {
-	// データベース接続を取得（dbは*sql.DB型のグローバル変数とします）
-	// jwtからログインしているユーザーIDを取得 TODO
-	userId := "7b31ecae-ab14-4f4a-a8b3-8b63cc10ddb2"
-
+func (ts *TaskUsecase) CreateTodo(ctx context.Context, todoRequest CreateTodoRequest, userId string) (model.Todo, error) {
 	// SQLBoilerを使用してToDoを作成
 	newTodo := &model.Todo{
 		Title:       todoRequest.Title,
