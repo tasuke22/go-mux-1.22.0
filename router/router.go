@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/tasuke/go-mux/controller"
+	"github.com/tasuke/go-mux/middleware"
 	"net/http"
 )
 
@@ -13,12 +14,12 @@ func NewRouter(uc *controller.UserController, tc *controller.TaskController) *ht
 
 	mux.HandleFunc("POST /api/v1/auth/signup", uc.SignUp)
 	mux.HandleFunc("POST /api/v1/auth/login", uc.Login)
-	mux.HandleFunc("POST /api/v1/auth/logout", uc.Logout)
+	mux.Handle("POST /api/v1/auth/logout", middleware.JWTMiddleware(uc.Logout))
 
-	mux.HandleFunc("POST /api/v1/todos", tc.CreateTodo)
+	mux.Handle("/api/v1/todos", middleware.JWTMiddleware(tc.CreateTodo))
 	mux.HandleFunc("GET /api/v1/todos", tc.GetAllTodos)
 	mux.HandleFunc("GET /api/v1/todos/{id}", tc.GetTodoByID)
-	mux.HandleFunc("POST /api/v1/todos/{id}", tc.UpdateTodo)
-	mux.HandleFunc("DELETE /api/v1/todos/{id}", tc.DeleteTodo)
+	mux.Handle("POST /api/v1/todos/{id}", middleware.JWTMiddleware(tc.UpdateTodo))
+	mux.Handle("DELETE /api/v1/todos/{id}", middleware.JWTMiddleware(tc.DeleteTodo))
 	return mux
 }
