@@ -7,8 +7,10 @@ import (
 )
 
 func JWTMiddleware(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
+	// ハンドラ関数 func(w http.ResponseWriter, r *http.Request) を
+	// http.HandlerFunc型にキャストすることで
+	// 戻り値である http.Handler インターフェースを満たすようにしている
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Cookieに設定してあるトークンを取得
 		c, err := r.Cookie("token")
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
