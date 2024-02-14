@@ -1,43 +1,52 @@
 package main
 
 import (
-	"github.com/tasuke/go-mux/auth"
+	"context"
 	"github.com/tasuke/go-mux/config"
-	"github.com/tasuke/go-mux/controller"
-	"github.com/tasuke/go-mux/repository"
 	"github.com/tasuke/go-mux/router"
-	"github.com/tasuke/go-mux/usecase"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
-	// データベース接続
 	db, err := config.NewDB()
 	if err != nil {
 		log.Fatalf("データベースへの接続に失敗しました: %v", err)
 	}
+	api := http.NewServeMux()
+	router.InitRoute(api, db)
 
-	// リポジトリの初期化
-	ur := repository.NewUserRepository(db)
-	tr := repository.NewTaskRepository(db)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
-	// ユースケースの初期化
-	uu := usecase.NewUserUsecase(ur)
-	tu := usecase.NewTaskUsecase(tr)
+	server := &http.Server{
+		Addr:    ":" + port,
+		Handler: api,
+	}
 
-	// 認証トークンからユーザーIDを抽出するための初期化
-	at := auth.NewAuthToken()
+	go func() {
+		log.Printf("HTTPサーバをポート %s で起動しています...\n", port)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTPサーバの起動に失敗しました: %v", err)
+		}
+	}()
 
-	// コントローラの初期化
-	uc := controller.NewUserController(uu)
-	tc := controller.NewTaskController(tu, at)
+	// シグナルを待機
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
 
-	// ルータの初期化
-	mux := router.NewRouter(uc, tc)
+	// グレースフルシャットダウン
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// HTTPサーバの起動
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatalf("HTTPサーバの起動に失敗しました: %v", err)
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("サーバのシャットダウン中にエラーが発生しました: %v", err)
 	}
 }
