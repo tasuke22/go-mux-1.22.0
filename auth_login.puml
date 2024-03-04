@@ -1,0 +1,22 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+actor クライアント as u
+entity "認証サーバー" as s
+database "データベース" as d
+
+== 認証プロセス ==
+u -> s: email: xxxxxxxx, password: yyyyyyyy
+s -> d: email, password確認
+d -> s: user_id取得
+s -> s: JWT検証にかかるuser_idと秘密鍵によってToken作成
+s -> u: token: aaaaaaa.bbbbbbb.ccccccc
+
+== トークンを利用してユーザー情報取得 ==
+u -> s: token: aaaaaaa.bbbbbbb.ccccccc
+s -> s: JWT規格に沿ってTokenの検証
+s -> d: Tokenの中に含まれるuser_idをもとにDBにアクセス
+d -> s: ユーザー情報取得
+s -> u: ユーザー情報返却
+
+@enduml

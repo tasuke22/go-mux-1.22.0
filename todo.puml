@@ -1,0 +1,22 @@
+@startuml
+
+entity "User" {
+    + id: varchar
+    ---
+    name: varchar
+    email: varchar
+    password: varchar
+}
+
+entity "Task" {
+    + id: integer
+    ---
+    title: varchar
+    description: varchar
+    completed: boolean {default: false}
+    userId: varchar <<FK>>
+}
+
+User ||--o{ Task : has
+
+@enduml
